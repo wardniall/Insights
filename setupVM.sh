@@ -115,6 +115,7 @@ if [ -f aiops-insights.pem.chain ]; then
   rm aiops-insights.pem.chain
 fi
 
+
 echo '-----BEGIN CERTIFICATE-----' > aiops-insights.pem.chain
 (sed -n '/<code>aiops-insights.pem.chain<\/code>/,/<\/code>/p' certFile | tail -n +3 | head -n -1) >> aiops-insights.pem.chain
 
@@ -132,6 +133,11 @@ openssl dgst -verify ./aiops-insights.pem.pub.key -keyform PEM -sha256 -signatur
 if [ $? -ne 0 ]; then
   echo "Downloaded agent tar signature not verified, exiting...."
   exit -1
+else
+  echo ""
+  echo "**************"
+  echo "**************"
+  echo "tar file valid"
 fi
 
 # just output the cert info for now
@@ -139,9 +145,14 @@ openssl x509 -in ./aiops-insights.pem.cer -noout -subject -issuer -startdate -en
 
 # check the cert validity
 
-openssl ocsp -no_nonce -issuer ./aiops-insights.pem.chain -cert ./aiops-insights.pem.cer -VAfile ./aiops-insights.pem.chain -text -url http://ocsp.digicert.com -respout ocsptest | grep 'Response verify OK'
+openssl ocsp -no_nonce -issuer ./aiops-insights.pem.chain -cert ./aiops-insights.pem.cer -VAfile ./aiops-insights.pem.chain -text -url http://ocsp.digicert.com -respout ocsptest 2>&1 | grep 'Response verify OK'
 if [ $? -ne 0 ]; then
   echo "Certificate validity check has failed, exiting....."
   exit -1
+else
+  echo ""
+  echo "**************"
+  echo "**************"
+  echo "Cert valid"
 fi
 
