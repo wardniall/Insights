@@ -93,7 +93,7 @@ oc login ${API_URL}:6443 -u ${USERNAME} -p ${PASSWORD}  --insecure-skip-tls-veri
 mkdir ~/holdit/instana-agent
 cd ~/holdit/instana-agent
 curl -L -o setup-agent.tar.gz https://github.com/IBM/aiops-insights-tools/releases/latest/download/setup-agent.tar.gz
-curl -L -o setup-agent.sig https://github.com/IBM/aiops-insights-tools/releases/latest/download/agent.sig
+curl -L -o agent.sig https://github.com/IBM/aiops-insights-tools/releases/latest/download/agent.sig
 
 
 # verify jars
