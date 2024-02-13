@@ -2,25 +2,27 @@
 
 USERNAME=''
 PASSWORD=''
+GITHUB_TOKEN=''
 INSIGHTS_URL=''
 API_URL=''
 DOWNLOAD_URL=''
 
 showHelp () {
         cat << EOF
-        Usage: ./setupVM.sh [-h|--help -u|--user=<USERNAME> -p|--password=<PASSWORD> -i|--insights=<INSIGHTS_URL>]
+        Usage: ./setupVM.sh [-h|--help -u|--user=<USERNAME> -p|--password=<PASSWORD> -t|--token=<GITHUB_TOKEN> -i|--insights=<INSIGHTS_URL>]
 
 Helper script to deploy prereqs on a VM that will employ the API to drive events into an Insights setup
 
 -h, --help                                      Display help
 -u, --user                                      username to log into Insights
 -p, --password                                  password for logging into Insights
+-t, --token                                     Github token for pulling artifacts in github.ibm.com repos
 -i, --insights                                  URL of Insights
 
 EOF
 }
 
-options=$(getopt -l "help,username:,password:,insights:" -o "h,u:,p:,i:" -a -- "$@")
+options=$(getopt -l "help,username:,password:,token:,insights:" -o "h,u:,p:,t:,i:" -a -- "$@")
 eval set -- "${options}"
 while true; do
         case ${1} in
@@ -35,6 +37,10 @@ while true; do
         -p|--password)
                 shift
                 PASSWORD="${1}"
+                ;;
+        -t|--token)
+                shift
+                GITHUB_TOKEN="${1}"
                 ;;
         -i|--insights)
                 shift
@@ -156,3 +162,16 @@ else
   echo "Cert valid"
 fi
 
+
+# download simulator jar
+
+mkdir ~/holdit/simulator
+cd ~/holdit/simulator
+
+sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo -y
+sudo dnf install gh -y
+export GH_ENTERPRISE_TOKEN=${GITHUB_TOKEN}
+gh auth login --hostname=github.ibm.com --git-protocol=https
+gh release download  -R katamari/itom-sensors-api-simulator -p "*"
+export GH_ENTERPRISE_TOKEN=
+gh auth logout -h github.ibm.com
