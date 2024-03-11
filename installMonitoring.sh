@@ -1,5 +1,41 @@
 #!/bin/bash
 
+DEPLOYMENT_TYPE=''
+
+showHelp () {
+        cat << EOF
+        Usage: ./installMonitoring.sh [-h|--help -t|--type=<GCP|FYRE>]
+Helper script to deploy the Prometheus and Grafana monitoring tools onto a k3s stack on GCP or Fyre
+-h, --help                                      Display help
+-t, --type                                      Deployment type to deploy the monitoring stack onto. Can be GCP or Fyre
+EOF
+}
+
+options=$(getopt -l "help,type:" -o "h,t:" -a -- "$@")
+eval set -- "${options}"
+while true; do
+        case ${1} in
+        -h|--help)
+                showHelp
+                exit 0
+                ;;
+        -t|--type)
+                shift
+                DEPLOYMENT_TYPE="${1}"
+                ;;
+        --)
+                shift
+                break
+                ;;
+        esac
+shift
+done
+
+if [ "${DEPLOYMENT_TYPE}" != "GCP" ] && [ "${DEPLOYMENT_TYPE}" != "FYRE" ]; then
+	echo "Invalid deployment type provided. Valid values are GCP or FYRE"
+	exit -1
+fi
+
 
 WORKING_FOLDER=$(pwd)
 
@@ -50,8 +86,14 @@ kubectl create -f prometheusNetworkPolicy.yml -n monitoring
 
 kubectl create -f grafanaNetworkPolicy.yml -n monitoring
 
-IP_ADDR=$(kubectl get nodes -o wide | tail -1 | awk '{print $6}')
+#IP_ADDR=$(kubectl get nodes -o wide | tail -1 | awk '{print $6}')
+if [ "${DEPLOYMENT_TYPE}" == "GCP" ]; then
+	IP_ADDR=$(curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip)
+else
+	IP_ADDR=$(kubectl get nodes -o wide | tail -1 | awk '{print $6}')
+fi
 
+echo ${IP_ADDR}
 until curl -s -f -o /dev/null "http://${IP_ADDR}:31111"
 do
   sleep 5
