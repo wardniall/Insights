@@ -25,6 +25,11 @@ sleep 20
 kubectl get svc -n monitoring
 
 echo "Writing service file"
+until kubectl get svc prometheus-operated -n monitoring
+do
+  echo "Waiting for promethues-operated to start"
+  sleep 5
+done
 
 kubectl get svc prometheus-operated -o yaml -n monitoring > ${WORKING_FOLDER}/prometheus_ClusterIP_svc.yml
 kubectl get svc grafana -o yaml -n monitoring > ${WORKING_FOLDER}/grafana_ClusterIP_svc.yml
@@ -55,6 +60,5 @@ done
 
 echo "Prometheus should be available on http://${IP_ADDR}:31111"
 echo "Grafana should be available on http://${IP_ADDR}:31112"
-
 
 
